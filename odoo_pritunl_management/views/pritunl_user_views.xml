@@ -9,7 +9,7 @@
                 <field name="email"/>
                 <field name="organization_id"/>
                 <field name="partner_id"/>
-                <field name="subscription_state"/>
+                <!-- <field name="subscription_state"/> -->
                 <field name="disabled"/>
                 <field name="synced"/>
             </tree>
@@ -38,8 +38,8 @@
                             <field name="partner_id"/>
                         </group>
                         <group>
-                            <field name="subscription_id"/>
-                            <field name="subscription_state"/>
+                            <!-- <field name="subscription_id"/> -->
+                            <!-- <field name="subscription_state"/> -->
                             <field name="groups"/>
                             <field name="bypass_secondary"/>
                             <field name="client_to_client"/>

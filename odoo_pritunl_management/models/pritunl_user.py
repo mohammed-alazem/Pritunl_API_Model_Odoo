@@ -30,11 +30,11 @@ class PritunlUser(models.Model):
     partner_id = fields.Many2one('res.partner', string='Related Partner',
                                  help="Link to customer for subscription control", tracking=True)
 
-    # Subscription Control
-    subscription_id = fields.Many2one('sale.subscription', string='Subscription',
-                                     help="User's VPN subscription")
-    subscription_state = fields.Selection(related='subscription_id.state',
-                                         string='Subscription Status', store=True)
+    # Subscription Control (Commented out - uncomment if sale_subscription module is installed)
+    # subscription_id = fields.Many2one('sale.subscription', string='Subscription',
+    #                                  help="User's VPN subscription", ondelete='set null')
+    # subscription_state = fields.Selection(related='subscription_id.state',
+    #                                      string='Subscription Status', store=True, readonly=True)
 
     # Status
     disabled = fields.Boolean('Disabled', default=False, tracking=True,
@@ -120,9 +120,9 @@ class PritunlUser(models.Model):
 
     def write(self, vals):
         """Update user in Pritunl when updated in Odoo"""
-        # Check if subscription state changed
-        if 'subscription_state' in vals or 'subscription_id' in vals:
-            self._handle_subscription_change()
+        # Check if subscription state changed (Commented out - requires sale_subscription)
+        # if 'subscription_state' in vals or 'subscription_id' in vals:
+        #     self._handle_subscription_change()
 
         result = super().write(vals)
 
@@ -176,24 +176,25 @@ class PritunlUser(models.Model):
 
         return super().unlink()
 
-    def _handle_subscription_change(self):
-        """Handle subscription state changes"""
-        for record in self:
-            if record.subscription_id:
-                # Disable user if subscription is not in progress
-                if record.subscription_state not in ['progress', '3_progress']:
-                    if not record.disabled:
-                        record.disabled = True
-                        record.message_post(
-                            body=f"User disabled due to subscription status: {record.subscription_state}"
-                        )
-                # Enable user if subscription is in progress
-                else:
-                    if record.disabled:
-                        record.disabled = False
-                        record.message_post(
-                            body="User enabled due to active subscription"
-                        )
+    # Commented out - requires sale_subscription module
+    # def _handle_subscription_change(self):
+    #     """Handle subscription state changes"""
+    #     for record in self:
+    #         if record.subscription_id:
+    #             # Disable user if subscription is not in progress
+    #             if record.subscription_state not in ['progress', '3_progress']:
+    #                 if not record.disabled:
+    #                     record.disabled = True
+    #                     record.message_post(
+    #                         body=f"User disabled due to subscription status: {record.subscription_state}"
+    #                     )
+    #             # Enable user if subscription is in progress
+    #             else:
+    #                 if record.disabled:
+    #                     record.disabled = False
+    #                     record.message_post(
+    #                         body="User enabled due to active subscription"
+    #                     )
 
     def action_toggle_disable(self):
         """Toggle user disabled status"""
@@ -327,9 +328,10 @@ class PritunlUser(models.Model):
         except Exception as e:
             raise UserError(f"Failed to sync users: {str(e)}")
 
-    @api.model
-    def cron_check_subscriptions(self):
-        """Scheduled action to check subscription status and enable/disable users"""
-        users = self.search([('subscription_id', '!=', False)])
-        for user in users:
-            user._handle_subscription_change()
+    # Commented out - requires sale_subscription module
+    # @api.model
+    # def cron_check_subscriptions(self):
+    #     """Scheduled action to check subscription status and enable/disable users"""
+    #     users = self.search([('subscription_id', '!=', False)])
+    #     for user in users:
+    #         user._handle_subscription_change()

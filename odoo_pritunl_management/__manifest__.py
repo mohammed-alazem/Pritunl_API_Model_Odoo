@@ -23,7 +23,6 @@ Complete management system for Pritunl VPN Server with:
     'depends': [
         'base',
         'mail',
-        'sale_subscription',  # For subscription management
     ],
     'data': [
         # Security

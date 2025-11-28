@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pritunl_link_tree" model="ir.ui.view">
+        <field name="name">pritunl.link.tree</field>
+        <field name="model">pritunl.link</field>
+        <field name="arch" type="xml">
+            <tree string="Site-to-Site Links">
+                <field name="name"/>
+                <field name="status"/>
+                <field name="synced"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_pritunl_link" model="ir.actions.act_window">
+        <field name="name">Site-to-Site Links</field>
+        <field name="res_model">pritunl.link</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

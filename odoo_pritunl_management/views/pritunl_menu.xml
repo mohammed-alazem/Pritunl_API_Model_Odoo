@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Main Menu -->
+    <menuitem id="menu_pritunl_root"
+              name="Pritunl VPN"
+              sequence="10"
+              web_icon="odoo_pritunl_management,static/description/icon.png"/>
+
+    <!-- Configuration Menu -->
+    <menuitem id="menu_pritunl_config"
+              name="Configuration"
+              parent="menu_pritunl_root"
+              sequence="1"
+              action="action_pritunl_config"/>
+
+    <!-- Organizations Menu -->
+    <menuitem id="menu_pritunl_organization"
+              name="Organizations"
+              parent="menu_pritunl_root"
+              sequence="10"
+              action="action_pritunl_organization"/>
+
+    <!-- Users Menu -->
+    <menuitem id="menu_pritunl_user"
+              name="VPN Users"
+              parent="menu_pritunl_root"
+              sequence="20"
+              action="action_pritunl_user"/>
+
+    <!-- Servers Menu -->
+    <menuitem id="menu_pritunl_server"
+              name="Servers"
+              parent="menu_pritunl_root"
+              sequence="30"
+              action="action_pritunl_server"/>
+
+    <!-- Hosts Menu -->
+    <menuitem id="menu_pritunl_host"
+              name="Hosts"
+              parent="menu_pritunl_root"
+              sequence="40"
+              action="action_pritunl_host"/>
+
+    <!-- Links Menu -->
+    <menuitem id="menu_pritunl_link"
+              name="Site-to-Site Links"
+              parent="menu_pritunl_root"
+              sequence="50"
+              action="action_pritunl_link"/>
+</odoo>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <!-- Pritunl VPN Groups -->
+        <record id="group_pritunl_user" model="res.groups">
+            <field name="name">Pritunl User</field>
+            <field name="category_id" ref="base.module_category_operations"/>
+        </record>
+
+        <record id="group_pritunl_manager" model="res.groups">
+            <field name="name">Pritunl Manager</field>
+            <field name="category_id" ref="base.module_category_operations"/>
+            <field name="implied_ids" eval="[(4, ref('group_pritunl_user'))]"/>
+        </record>
+
+        <record id="group_pritunl_admin" model="res.groups">
+            <field name="name">Pritunl Administrator</field>
+            <field name="category_id" ref="base.module_category_operations"/>
+            <field name="implied_ids" eval="[(4, ref('group_pritunl_manager'))]"/>
+        </record>
+
+        <!-- Record Rules -->
+        <record id="pritunl_config_rule_admin" model="ir.rule">
+            <field name="name">Pritunl Config: Admin Full Access</field>
+            <field name="model_id" ref="model_pritunl_config"/>
+            <field name="domain_force">[(1,'=',1)]</field>
+            <field name="groups" eval="[(4, ref('group_pritunl_admin'))]"/>
+        </record>
+
+        <record id="pritunl_organization_rule_user" model="ir.rule">
+            <field name="name">Pritunl Organization: User Read Access</field>
+            <field name="model_id" ref="model_pritunl_organization"/>
+            <field name="domain_force">[(1,'=',1)]</field>
+            <field name="groups" eval="[(4, ref('group_pritunl_user'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+    </data>
+</odoo>

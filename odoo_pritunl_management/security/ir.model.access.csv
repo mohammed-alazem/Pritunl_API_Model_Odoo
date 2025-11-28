@@ -1,0 +1,18 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_pritunl_config_admin,pritunl.config admin,model_pritunl_config,group_pritunl_admin,1,1,1,1
+access_pritunl_config_manager,pritunl.config manager,model_pritunl_config,group_pritunl_manager,1,0,0,0
+access_pritunl_organization_admin,pritunl.organization admin,model_pritunl_organization,group_pritunl_admin,1,1,1,1
+access_pritunl_organization_manager,pritunl.organization manager,model_pritunl_organization,group_pritunl_manager,1,1,1,0
+access_pritunl_organization_user,pritunl.organization user,model_pritunl_organization,group_pritunl_user,1,0,0,0
+access_pritunl_user_admin,pritunl.user admin,model_pritunl_user,group_pritunl_admin,1,1,1,1
+access_pritunl_user_manager,pritunl.user manager,model_pritunl_user,group_pritunl_manager,1,1,1,1
+access_pritunl_user_user,pritunl.user user,model_pritunl_user,group_pritunl_user,1,0,0,0
+access_pritunl_server_admin,pritunl.server admin,model_pritunl_server,group_pritunl_admin,1,1,1,1
+access_pritunl_server_manager,pritunl.server manager,model_pritunl_server,group_pritunl_manager,1,1,1,0
+access_pritunl_server_user,pritunl.server user,model_pritunl_server,group_pritunl_user,1,0,0,0
+access_pritunl_host_admin,pritunl.host admin,model_pritunl_host,group_pritunl_admin,1,1,1,1
+access_pritunl_host_manager,pritunl.host manager,model_pritunl_host,group_pritunl_manager,1,1,1,0
+access_pritunl_host_user,pritunl.host user,model_pritunl_host,group_pritunl_user,1,0,0,0
+access_pritunl_link_admin,pritunl.link admin,model_pritunl_link,group_pritunl_admin,1,1,1,1
+access_pritunl_link_manager,pritunl.link manager,model_pritunl_link,group_pritunl_manager,1,1,1,0
+access_pritunl_link_user,pritunl.link user,model_pritunl_link,group_pritunl_user,1,0,0,0

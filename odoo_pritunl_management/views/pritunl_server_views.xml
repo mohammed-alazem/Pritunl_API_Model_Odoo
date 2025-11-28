@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pritunl_server_tree" model="ir.ui.view">
+        <field name="name">pritunl.server.tree</field>
+        <field name="model">pritunl.server</field>
+        <field name="arch" type="xml">
+            <tree string="VPN Servers" decoration-success="status=='online'" decoration-muted="status=='offline'">
+                <field name="name"/>
+                <field name="network"/>
+                <field name="port"/>
+                <field name="protocol"/>
+                <field name="status"/>
+                <field name="max_clients"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_pritunl_server_form" model="ir.ui.view">
+        <field name="name">pritunl.server.form</field>
+        <field name="model">pritunl.server</field>
+        <field name="arch" type="xml">
+            <form string="VPN Server">
+                <header>
+                    <button name="action_start_server" type="object" string="Start" class="oe_highlight" invisible="status=='online'"/>
+                    <button name="action_stop_server" type="object" string="Stop" class="btn-warning" invisible="status=='offline'"/>
+                    <button name="action_restart_server" type="object" string="Restart"/>
+                    <button name="action_attach_organizations" type="object" string="Attach Organizations"/>
+                    <field name="status" widget="badge" decoration-success="status=='online'" decoration-danger="status=='offline'"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="network"/>
+                            <field name="network_start"/>
+                            <field name="network_end"/>
+                            <field name="port"/>
+                            <field name="protocol"/>
+                        </group>
+                        <group>
+                            <field name="max_clients"/>
+                            <field name="max_devices"/>
+                            <field name="otp_auth"/>
+                            <field name="inter_client"/>
+                            <field name="ipv6"/>
+                            <field name="debug"/>
+                        </group>
+                    </group>
+                    <group string="DNS Configuration">
+                        <field name="dns_servers"/>
+                        <field name="search_domain"/>
+                    </group>
+                    <group string="Organizations">
+                        <field name="organization_ids" widget="many2many_tags"/>
+                    </group>
+                    <group>
+                        <field name="pritunl_id" readonly="1"/>
+                        <field name="synced" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_pritunl_server" model="ir.actions.act_window">
+        <field name="name">Servers</field>
+        <field name="res_model">pritunl.server</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

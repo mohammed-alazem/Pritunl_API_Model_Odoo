@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pritunl_organization_tree" model="ir.ui.view">
+        <field name="name">pritunl.organization.tree</field>
+        <field name="model">pritunl.organization</field>
+        <field name="arch" type="xml">
+            <tree string="Organizations">
+                <field name="name"/>
+                <field name="user_count"/>
+                <field name="pritunl_id"/>
+                <field name="synced"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_pritunl_organization_form" model="ir.ui.view">
+        <field name="name">pritunl.organization.form</field>
+        <field name="model">pritunl.organization</field>
+        <field name="arch" type="xml">
+            <form string="Organization">
+                <header>
+                    <button name="action_view_users" type="object" string="View Users" class="oe_highlight"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_users" type="object" class="oe_stat_button" icon="fa-users">
+                            <field name="user_count" widget="statinfo" string="Users"/>
+                        </button>
+                    </div>
+                    <group>
+                        <field name="name"/>
+                        <field name="pritunl_id" readonly="1"/>
+                        <field name="config_id"/>
+                        <field name="synced"/>
+                    </group>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_pritunl_organization" model="ir.actions.act_window">
+        <field name="name">Organizations</field>
+        <field name="res_model">pritunl.organization</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

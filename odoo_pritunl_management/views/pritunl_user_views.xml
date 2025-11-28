@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pritunl_user_tree" model="ir.ui.view">
+        <field name="name">pritunl.user.tree</field>
+        <field name="model">pritunl.user</field>
+        <field name="arch" type="xml">
+            <tree string="VPN Users" decoration-muted="disabled==True">
+                <field name="name"/>
+                <field name="email"/>
+                <field name="organization_id"/>
+                <field name="partner_id"/>
+                <field name="subscription_state"/>
+                <field name="disabled"/>
+                <field name="synced"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_pritunl_user_form" model="ir.ui.view">
+        <field name="name">pritunl.user.form</field>
+        <field name="model">pritunl.user</field>
+        <field name="arch" type="xml">
+            <form string="VPN User">
+                <header>
+                    <button name="action_toggle_disable" type="object" string="Enable" class="oe_highlight" invisible="disabled==False"/>
+                    <button name="action_toggle_disable" type="object" string="Disable" class="btn-warning" invisible="disabled==True"/>
+                    <button name="action_generate_otp" type="object" string="Generate OTP"/>
+                    <button name="action_download_vpn_config" type="object" string="Download Config" class="oe_highlight"/>
+                    <field name="disabled" widget="badge" decoration-danger="disabled==True" decoration-success="disabled==False"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="email"/>
+                            <field name="pin" password="True"/>
+                            <field name="organization_id"/>
+                            <field name="partner_id"/>
+                        </group>
+                        <group>
+                            <field name="subscription_id"/>
+                            <field name="subscription_state"/>
+                            <field name="groups"/>
+                            <field name="bypass_secondary"/>
+                            <field name="client_to_client"/>
+                        </group>
+                    </group>
+                    <group string="DNS Settings">
+                        <field name="dns_servers"/>
+                        <field name="dns_suffix"/>
+                    </group>
+                    <group string="OTP Information">
+                        <field name="otp_secret" readonly="1"/>
+                        <field name="otp_auth_url" readonly="1"/>
+                    </group>
+                    <group>
+                        <field name="pritunl_id" readonly="1"/>
+                        <field name="synced" readonly="1"/>
+                        <field name="last_sync_date" readonly="1"/>
+                    </group>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_pritunl_user" model="ir.actions.act_window">
+        <field name="name">VPN Users</field>
+        <field name="res_model">pritunl.user</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

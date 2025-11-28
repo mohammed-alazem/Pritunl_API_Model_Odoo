@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Configuration Tree View -->
+    <record id="view_pritunl_config_tree" model="ir.ui.view">
+        <field name="name">pritunl.config.tree</field>
+        <field name="model">pritunl.config</field>
+        <field name="arch" type="xml">
+            <tree string="Pritunl Configurations">
+                <field name="name"/>
+                <field name="base_url"/>
+                <field name="is_default"/>
+                <field name="sync_status"/>
+                <field name="last_sync_date"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Configuration Form View -->
+    <record id="view_pritunl_config_form" model="ir.ui.view">
+        <field name="name">pritunl.config.form</field>
+        <field name="model">pritunl.config</field>
+        <field name="arch" type="xml">
+            <form string="Pritunl Configuration">
+                <header>
+                    <button name="action_test_connection" type="object" string="Test Connection" class="oe_highlight"/>
+                    <button name="action_sync_all" type="object" string="Sync All Data" class="oe_highlight"/>
+                    <field name="sync_status" widget="badge" decoration-success="sync_status == 'success'"
+                           decoration-danger="sync_status == 'failed'" decoration-info="sync_status == 'never'"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_test_connection" type="object"
+                                class="oe_stat_button" icon="fa-plug">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_text">Test</span>
+                                <span class="o_stat_text">Connection</span>
+                            </div>
+                        </button>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="base_url" placeholder="https://vpn1.craftron.co:8447"/>
+                            <field name="is_default"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="api_token" password="True"/>
+                            <field name="api_secret" password="True"/>
+                            <field name="verify_ssl"/>
+                            <field name="timeout"/>
+                        </group>
+                    </group>
+                    <group string="Last Sync Information">
+                        <field name="last_sync_date"/>
+                        <field name="sync_message"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Configuration Action -->
+    <record id="action_pritunl_config" model="ir.actions.act_window">
+        <field name="name">Pritunl Configuration</field>
+        <field name="res_model">pritunl.config</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Pritunl Configuration
+            </p>
+            <p>
+                Configure your Pritunl server API credentials here.
+            </p>
+        </field>
+    </record>
+</odoo>

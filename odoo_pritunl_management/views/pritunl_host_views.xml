@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pritunl_host_tree" model="ir.ui.view">
+        <field name="name">pritunl.host.tree</field>
+        <field name="model">pritunl.host</field>
+        <field name="arch" type="xml">
+            <tree string="Hosts">
+                <field name="name"/>
+                <field name="public_address"/>
+                <field name="status"/>
+                <field name="synced"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_pritunl_host" model="ir.actions.act_window">
+        <field name="name">Hosts</field>
+        <field name="res_model">pritunl.host</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

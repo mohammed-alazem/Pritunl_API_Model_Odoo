@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Cron Job: Sync Pritunl Data -->
+        <record id="cron_sync_pritunl_data" model="ir.cron">
+            <field name="name">Sync Pritunl Data</field>
+            <field name="model_id" ref="model_pritunl_config"/>
+            <field name="state">code</field>
+            <field name="code">model.cron_sync_pritunl_data()</field>
+            <field name="interval_number">30</field>
+            <field name="interval_type">minutes</field>
+            <field name="numbercall">-1</field>
+            <field name="active" eval="True"/>
+        </record>
+
+        <!-- Cron Job: Check Subscriptions and Disable/Enable Users -->
+        <record id="cron_check_subscriptions" model="ir.cron">
+            <field name="name">Check VPN User Subscriptions</field>
+            <field name="model_id" ref="model_pritunl_user"/>
+            <field name="state">code</field>
+            <field name="code">model.cron_check_subscriptions()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">hours</field>
+            <field name="numbercall">-1</field>
+            <field name="active" eval="True"/>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,2464 @@
+{
+	"info": {
+		"_postman_id": "pritunl-api-collection",
+		"name": "Pritunl API Complete Collection",
+		"description": "Complete Pritunl VPN Server API Collection with HMAC Authentication",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"version": "1.32.4400.99"
+	},
+	"auth": {
+		"type": "noauth"
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Load environment variables",
+					"const apiToken = pm.environment.get(\"api_token\");",
+					"const apiSecret = pm.environment.get(\"api_secret\");",
+					"const path = pm.request.url.getPath();",
+					"const method = pm.request.method;",
+					"",
+					"console.log(\"api_token:\", apiToken);",
+					"console.log(\"api_secret:\", apiSecret);",
+					"console.log(\"path:\", path);",
+					"console.log(\"method:\", method);",
+					"",
+					"// Generate timestamp",
+					"const timestamp = Math.floor(Date.now() / 1000).toString();",
+					"",
+					"// Generate secure random nonce (32 hex chars)",
+					"function generateNonce() {",
+					"    const arr = new Uint8Array(16);",
+					"    crypto.getRandomValues(arr);",
+					"    return Array.from(arr, b => b.toString(16).padStart(2, \"0\")).join(\"\");",
+					"}",
+					"const nonce = generateNonce();",
+					"",
+					"// Build auth string",
+					"const authString = [",
+					"    apiToken,",
+					"    timestamp,",
+					"    nonce,",
+					"    method.toUpperCase(),",
+					"    path",
+					"].join(\"&\");",
+					"",
+					"// Convert ArrayBuffer → Base64",
+					"function arrayBufferToBase64(buf) {",
+					"    let binary = \"\";",
+					"    const bytes = new Uint8Array(buf);",
+					"    bytes.forEach(b => binary += String.fromCharCode(b));",
+					"    return btoa(binary);",
+					"}",
+					"",
+					"// Generate HMAC SHA256 (async)",
+					"async function generateSignature() {",
+					"    const encoder = new TextEncoder();",
+					"    const keyData = encoder.encode(apiSecret);",
+					"    const msgData = encoder.encode(authString);",
+					"",
+					"    const key = await crypto.subtle.importKey(",
+					"        \"raw\",",
+					"        keyData,",
+					"        { name: \"HMAC\", hash: \"SHA-256\" },",
+					"        false,",
+					"        [\"sign\"]",
+					"    );",
+					"",
+					"    const signature = await crypto.subtle.sign(\"HMAC\", key, msgData);",
+					"    return arrayBufferToBase64(signature);",
+					"}",
+					"",
+					"// Run WebCrypto HMAC",
+					"generateSignature().then(signature => {",
+					"",
+					"    // Set headers",
+					"    pm.request.headers.upsert({ key: \"Auth-Token\", value: apiToken });",
+					"    pm.request.headers.upsert({ key: \"Auth-Timestamp\", value: timestamp });",
+					"    pm.request.headers.upsert({ key: \"Auth-Nonce\", value: nonce });",
+					"    pm.request.headers.upsert({ key: \"Auth-Signature\", value: signature });",
+					"",
+					"    // Debug",
+					"    console.log(\"auth_string:\", authString);",
+					"    console.log(\"nonce:\", nonce);",
+					"    console.log(\"signature:\", signature);",
+					"});"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "https://vpn1.craftron.co:8447",
+			"type": "string"
+		},
+		{
+			"key": "api_token",
+			"value": "oOOhfrao5cfMvQZqwz8zZq5B9J4PAYHe",
+			"type": "string"
+		},
+		{
+			"key": "api_secret",
+			"value": "pn5uOLmsmrepDukeLq6prDOxoxEg59ZH",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Login - Create Session",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"admin\",\n    \"password\": \"your_password\",\n    \"otp_code\": \"\",\n    \"yubico_key\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/session",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "session"]
+						},
+						"description": "Authenticate and create a new session. Returns session token."
+					}
+				},
+				{
+					"name": "Logout - Delete Session",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/auth/session",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "session"]
+						},
+						"description": "Delete current session and logout."
+					}
+				},
+				{
+					"name": "Get State",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/state",
+							"host": ["{{base_url}}"],
+							"path": ["state"]
+						},
+						"description": "Get current application state including version, theme, subscription info."
+					}
+				}
+			],
+			"description": "Authentication endpoints for login/logout and state management"
+		},
+		{
+			"name": "Administrators",
+			"item": [
+				{
+					"name": "List Administrators",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/admin",
+							"host": ["{{base_url}}"],
+							"path": ["admin"]
+						},
+						"description": "Get list of all administrators"
+					}
+				},
+				{
+					"name": "Get Administrator",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/admin/:admin_id",
+							"host": ["{{base_url}}"],
+							"path": ["admin", ":admin_id"],
+							"variable": [
+								{
+									"key": "admin_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Get details of a specific administrator"
+					}
+				},
+				{
+					"name": "Create Administrator",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"newadmin\",\n    \"password\": \"secure_password\",\n    \"auth_api\": true,\n    \"super_user\": false,\n    \"disabled\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/admin",
+							"host": ["{{base_url}}"],
+							"path": ["admin"]
+						},
+						"description": "Create a new administrator"
+					}
+				},
+				{
+					"name": "Update Administrator",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"admin\",\n    \"password\": \"new_password\",\n    \"auth_api\": true,\n    \"disabled\": false,\n    \"super_user\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/admin/:admin_id",
+							"host": ["{{base_url}}"],
+							"path": ["admin", ":admin_id"],
+							"variable": [
+								{
+									"key": "admin_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Update an existing administrator"
+					}
+				},
+				{
+					"name": "Delete Administrator",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/admin/:admin_id",
+							"host": ["{{base_url}}"],
+							"path": ["admin", ":admin_id"],
+							"variable": [
+								{
+									"key": "admin_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Delete an administrator"
+					}
+				},
+				{
+					"name": "Get Administrator Audit Log",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/admin/:admin_id/audit",
+							"host": ["{{base_url}}"],
+							"path": ["admin", ":admin_id", "audit"],
+							"variable": [
+								{
+									"key": "admin_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Get audit log for administrator"
+					}
+				}
+			],
+			"description": "Administrator management endpoints"
+		},
+		{
+			"name": "Organizations",
+			"item": [
+				{
+					"name": "List Organizations",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/organization",
+							"host": ["{{base_url}}"],
+							"path": ["organization"]
+						},
+						"description": "Get all organizations"
+					}
+				},
+				{
+					"name": "Get Organization",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/organization/:org_id",
+							"host": ["{{base_url}}"],
+							"path": ["organization", ":org_id"],
+							"variable": [
+								{
+									"key": "org_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Get organization details"
+					}
+				},
+				{
+					"name": "Create Organization",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"My Organization\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/organization",
+							"host": ["{{base_url}}"],
+							"path": ["organization"]
+						},
+						"description": "Create a new organization"
+					}
+				},
+				{
+					"name": "Update Organization",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated Organization Name\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/organization/:org_id",
+							"host": ["{{base_url}}"],
+							"path": ["organization", ":org_id"],
+							"variable": [
+								{
+									"key": "org_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Update organization"
+					}
+				},
+				{
+					"name": "Delete Organization",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/organization/:org_id",
+							"host": ["{{base_url}}"],
+							"path": ["organization", ":org_id"],
+							"variable": [
+								{
+									"key": "org_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Delete an organization"
+					}
+				}
+			],
+			"description": "Organization management endpoints"
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "List Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/user/:org_id",
+							"host": ["{{base_url}}"],
+							"path": ["user", ":org_id"],
+							"variable": [
+								{
+									"key": "org_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Get all users in organization"
+					}
+				},
+				{
+					"name": "Get User",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/user/:org_id/:user_id",
+							"host": ["{{base_url}}"],
+							"path": ["user", ":org_id", ":user_id"],
+							"variable": [
+								{
+									"key": "org_id",
+									"value": ""
+								},
+								{
+									"key": "user_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Get user details"
+					}
+				},
+				{
+					"name": "Create User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"john.doe\",\n    \"email\": \"john@example.com\",\n    \"pin\": \"123456\",\n    \"disabled\": false,\n    \"groups\": [\"developers\"],\n    \"bypass_secondary\": false,\n    \"client_to_client\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/user/:org_id",
+							"host": ["{{base_url}}"],
+							"path": ["user", ":org_id"],
+							"variable": [
+								{
+									"key": "org_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Create a new user"
+					}
+				},
+				{
+					"name": "Create Multiple Users",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"users\": [\n        {\"name\": \"user1\", \"email\": \"user1@example.com\"},\n        {\"name\": \"user2\", \"email\": \"user2@example.com\"}\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/user/:org_id/multi",
+							"host": ["{{base_url}}"],
+							"path": ["user", ":org_id", "multi"],
+							"variable": [
+								{
+									"key": "org_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Create multiple users at once"
+					}
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"john.doe\",\n    \"email\": \"john.new@example.com\",\n    \"disabled\": false,\n    \"groups\": [\"developers\", \"vpn-users\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/user/:org_id/:user_id",
+							"host": ["{{base_url}}"],
+							"path": ["user", ":org_id", ":user_id"],
+							"variable": [
+								{
+									"key": "org_id",
+									"value": ""
+								},
+								{
+									"key": "user_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Update user"
+					}
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/user/:org_id/:user_id",
+							"host": ["{{base_url}}"],
+							"path": ["user", ":org_id", ":user_id"],
+							"variable": [
+								{
+									"key": "org_id",
+									"value": ""
+								},
+								{
+									"key": "user_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Delete user"
+					}
+				},
+				{
+					"name": "Generate User OTP Secret",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/user/:org_id/:user_id/otp_secret",
+							"host": ["{{base_url}}"],
+							"path": ["user", ":org_id", ":user_id", "otp_secret"],
+							"variable": [
+								{
+									"key": "org_id",
+									"value": ""
+								},
+								{
+									"key": "user_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Generate new OTP secret for user"
+					}
+				},
+				{
+					"name": "Get User Audit Log",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/user/:org_id/:user_id/audit",
+							"host": ["{{base_url}}"],
+							"path": ["user", ":org_id", ":user_id", "audit"],
+							"variable": [
+								{
+									"key": "org_id",
+									"value": ""
+								},
+								{
+									"key": "user_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Get audit log for user"
+					}
+				},
+				{
+					"name": "Approve Device",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/user/:org_id/:user_id/device/:device_id",
+							"host": ["{{base_url}}"],
+							"path": ["user", ":org_id", ":user_id", "device", ":device_id"],
+							"variable": [
+								{
+									"key": "org_id",
+									"value": ""
+								},
+								{
+									"key": "user_id",
+									"value": ""
+								},
+								{
+									"key": "device_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Approve a device for user"
+					}
+				},
+				{
+					"name": "Delete Device",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/user/:org_id/:user_id/device/:device_id",
+							"host": ["{{base_url}}"],
+							"path": ["user", ":org_id", ":user_id", "device", ":device_id"],
+							"variable": [
+								{
+									"key": "org_id",
+									"value": ""
+								},
+								{
+									"key": "user_id",
+									"value": ""
+								},
+								{
+									"key": "device_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Delete a device for user"
+					}
+				}
+			],
+			"description": "User management endpoints"
+		},
+		{
+			"name": "Servers",
+			"item": [
+				{
+					"name": "List Servers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/server",
+							"host": ["{{base_url}}"],
+							"path": ["server"]
+						},
+						"description": "Get all VPN servers"
+					}
+				},
+				{
+					"name": "Get Server",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/server/:server_id",
+							"host": ["{{base_url}}"],
+							"path": ["server", ":server_id"],
+							"variable": [
+								{
+									"key": "server_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Get server details"
+					}
+				},
+				{
+					"name": "Create Server",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"VPN Server 1\",\n    \"network\": \"10.0.0.0/8\",\n    \"network_start\": \"10.0.0.2\",\n    \"network_end\": \"10.255.255.254\",\n    \"port\": 15500,\n    \"protocol\": \"udp\",\n    \"dh_param_bits\": 2048,\n    \"groups\": [],\n    \"dns_servers\": [\"8.8.8.8\", \"8.8.4.4\"],\n    \"inter_client\": true,\n    \"ipv6\": false,\n    \"ipv6_firewall\": true,\n    \"bind_address\": null\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/server",
+							"host": ["{{base_url}}"],
+							"path": ["server"]
+						},
+						"description": "Create a new VPN server"
+					}
+				},
+				{
+					"name": "Update Server",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated Server Name\",\n    \"network\": \"10.0.0.0/8\",\n    \"port\": 15500,\n    \"protocol\": \"udp\",\n    \"dns_servers\": [\"8.8.8.8\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/server/:server_id",
+							"host": ["{{base_url}}"],
+							"path": ["server", ":server_id"],
+							"variable": [
+								{
+									"key": "server_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Update server configuration"
+					}
+				},
+				{
+					"name": "Delete Server",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/server/:server_id",
+							"host": ["{{base_url}}"],
+							"path": ["server", ":server_id"],
+							"variable": [
+								{
+									"key": "server_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Delete a server"
+					}
+				},
+				{
+					"name": "Start Server",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/server/:server_id/operation/start",
+							"host": ["{{base_url}}"],
+							"path": ["server", ":server_id", "operation", "start"],
+							"variable": [
+								{
+									"key": "server_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Start VPN server"
+					}
+				},
+				{
+					"name": "Stop Server",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/server/:server_id/operation/stop",
+							"host": ["{{base_url}}"],
+							"path": ["server", ":server_id", "operation", "stop"],
+							"variable": [
+								{
+									"key": "server_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Stop VPN server"
+					}
+				},
+				{
+					"name": "Restart Server",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/server/:server_id/operation/restart",
+							"host": ["{{base_url}}"],
+							"path": ["server", ":server_id", "operation", "restart"],
+							"variable": [
+								{
+									"key": "server_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Restart VPN server"
+					}
+				},
+				{
+					"name": "Get Server Organizations",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/server/:server_id/organization",
+							"host": ["{{base_url}}"],
+							"path": ["server", ":server_id", "organization"],
+							"variable": [
+								{
+									"key": "server_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Get organizations attached to server"
+					}
+				},
+				{
+					"name": "Attach Organization to Server",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/server/:server_id/organization/:org_id",
+							"host": ["{{base_url}}"],
+							"path": ["server", ":server_id", "organization", ":org_id"],
+							"variable": [
+								{
+									"key": "server_id",
+									"value": ""
+								},
+								{
+									"key": "org_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Attach organization to server"
+					}
+				},
+				{
+					"name": "Detach Organization from Server",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/server/:server_id/organization/:org_id",
+							"host": ["{{base_url}}"],
+							"path": ["server", ":server_id", "organization", ":org_id"],
+							"variable": [
+								{
+									"key": "server_id",
+									"value": ""
+								},
+								{
+									"key": "org_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Detach organization from server"
+					}
+				},
+				{
+					"name": "Get Server Routes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/server/:server_id/route",
+							"host": ["{{base_url}}"],
+							"path": ["server", ":server_id", "route"],
+							"variable": [
+								{
+									"key": "server_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Get server routes"
+					}
+				},
+				{
+					"name": "Add Server Route",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"network\": \"192.168.1.0/24\",\n    \"comment\": \"Internal network\",\n    \"nat\": true,\n    \"nat_interface\": \"eth0\",\n    \"nat_netmap\": null,\n    \"advertise\": false,\n    \"net_gateway\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/server/:server_id/route",
+							"host": ["{{base_url}}"],
+							"path": ["server", ":server_id", "route"],
+							"variable": [
+								{
+									"key": "server_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Add route to server"
+					}
+				},
+				{
+					"name": "Add Multiple Server Routes",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"routes\": [\n        {\"network\": \"192.168.1.0/24\"},\n        {\"network\": \"192.168.2.0/24\"}\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/server/:server_id/routes",
+							"host": ["{{base_url}}"],
+							"path": ["server", ":server_id", "routes"],
+							"variable": [
+								{
+									"key": "server_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Add multiple routes to server"
+					}
+				},
+				{
+					"name": "Update Server Route",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"network\": \"192.168.1.0/24\",\n    \"comment\": \"Updated route\",\n    \"nat\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/server/:server_id/route/:route_network",
+							"host": ["{{base_url}}"],
+							"path": ["server", ":server_id", "route", ":route_network"],
+							"variable": [
+								{
+									"key": "server_id",
+									"value": ""
+								},
+								{
+									"key": "route_network",
+									"value": "192.168.1.0-24"
+								}
+							]
+						},
+						"description": "Update server route (use network with dash instead of slash, e.g., 192.168.1.0-24)"
+					}
+				},
+				{
+					"name": "Delete Server Route",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/server/:server_id/route/:route_network",
+							"host": ["{{base_url}}"],
+							"path": ["server", ":server_id", "route", ":route_network"],
+							"variable": [
+								{
+									"key": "server_id",
+									"value": ""
+								},
+								{
+									"key": "route_network",
+									"value": "192.168.1.0-24"
+								}
+							]
+						},
+						"description": "Delete server route"
+					}
+				},
+				{
+					"name": "Get Server Hosts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/server/:server_id/host",
+							"host": ["{{base_url}}"],
+							"path": ["server", ":server_id", "host"],
+							"variable": [
+								{
+									"key": "server_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Get hosts attached to server"
+					}
+				},
+				{
+					"name": "Attach Host to Server",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/server/:server_id/host/:host_id",
+							"host": ["{{base_url}}"],
+							"path": ["server", ":server_id", "host", ":host_id"],
+							"variable": [
+								{
+									"key": "server_id",
+									"value": ""
+								},
+								{
+									"key": "host_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Attach host to server"
+					}
+				},
+				{
+					"name": "Detach Host from Server",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/server/:server_id/host/:host_id",
+							"host": ["{{base_url}}"],
+							"path": ["server", ":server_id", "host", ":host_id"],
+							"variable": [
+								{
+									"key": "server_id",
+									"value": ""
+								},
+								{
+									"key": "host_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Detach host from server"
+					}
+				},
+				{
+					"name": "Get Server Links",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/server/:server_id/link",
+							"host": ["{{base_url}}"],
+							"path": ["server", ":server_id", "link"],
+							"variable": [
+								{
+									"key": "server_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Get server links"
+					}
+				},
+				{
+					"name": "Create Server Link",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/server/:server_id/link/:link_server_id",
+							"host": ["{{base_url}}"],
+							"path": ["server", ":server_id", "link", ":link_server_id"],
+							"variable": [
+								{
+									"key": "server_id",
+									"value": ""
+								},
+								{
+									"key": "link_server_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Create link between servers"
+					}
+				},
+				{
+					"name": "Delete Server Link",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/server/:server_id/link/:link_server_id",
+							"host": ["{{base_url}}"],
+							"path": ["server", ":server_id", "link", ":link_server_id"],
+							"variable": [
+								{
+									"key": "server_id",
+									"value": ""
+								},
+								{
+									"key": "link_server_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Delete server link"
+					}
+				},
+				{
+					"name": "Get Server Output",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/server/:server_id/output",
+							"host": ["{{base_url}}"],
+							"path": ["server", ":server_id", "output"],
+							"variable": [
+								{
+									"key": "server_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Get server output logs"
+					}
+				},
+				{
+					"name": "Clear Server Output",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/server/:server_id/output",
+							"host": ["{{base_url}}"],
+							"path": ["server", ":server_id", "output"],
+							"variable": [
+								{
+									"key": "server_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Clear server output"
+					}
+				},
+				{
+					"name": "Get Server Link Output",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/server/:server_id/link_output",
+							"host": ["{{base_url}}"],
+							"path": ["server", ":server_id", "link_output"],
+							"variable": [
+								{
+									"key": "server_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Get server link output"
+					}
+				},
+				{
+					"name": "Clear Server Link Output",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/server/:server_id/link_output",
+							"host": ["{{base_url}}"],
+							"path": ["server", ":server_id", "link_output"],
+							"variable": [
+								{
+									"key": "server_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Clear server link output"
+					}
+				},
+				{
+					"name": "Get Server Bandwidth",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/server/:server_id/bandwidth/:period",
+							"host": ["{{base_url}}"],
+							"path": ["server", ":server_id", "bandwidth", ":period"],
+							"variable": [
+								{
+									"key": "server_id",
+									"value": ""
+								},
+								{
+									"key": "period",
+									"value": "1m",
+									"description": "1m, 5m, 30m, 2h, 1d"
+								}
+							]
+						},
+						"description": "Get server bandwidth statistics"
+					}
+				},
+				{
+					"name": "Get Server VPCs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/server/vpcs",
+							"host": ["{{base_url}}"],
+							"path": ["server", "vpcs"]
+						},
+						"description": "Get available VPC networks (AWS)"
+					}
+				}
+			],
+			"description": "VPN server management endpoints"
+		},
+		{
+			"name": "Keys",
+			"item": [
+				{
+					"name": "Download User Keys (TAR)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/data/:org_id/:user_id.tar",
+							"host": ["{{base_url}}"],
+							"path": ["data", ":org_id", ":user_id.tar"],
+							"variable": [
+								{
+									"key": "org_id",
+									"value": ""
+								},
+								{
+									"key": "user_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Download user keys as TAR archive"
+					}
+				},
+				{
+					"name": "Download User Keys (ZIP)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/data/:org_id/:user_id.zip",
+							"host": ["{{base_url}}"],
+							"path": ["data", ":org_id", ":user_id.zip"],
+							"variable": [
+								{
+									"key": "org_id",
+									"value": ""
+								},
+								{
+									"key": "user_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Download user keys as ZIP archive"
+					}
+				},
+				{
+					"name": "Download User Keys (ONC - ChromeOS)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/data/:org_id/:user_id.onc",
+							"host": ["{{base_url}}"],
+							"path": ["data", ":org_id", ":user_id.onc"],
+							"variable": [
+								{
+									"key": "org_id",
+									"value": ""
+								},
+								{
+									"key": "user_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Download user keys in ONC format for ChromeOS"
+					}
+				},
+				{
+					"name": "Get User Key URLs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/data/:org_id/:user_id",
+							"host": ["{{base_url}}"],
+							"path": ["data", ":org_id", ":user_id"],
+							"variable": [
+								{
+									"key": "org_id",
+									"value": ""
+								},
+								{
+									"key": "user_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Get user key download URLs"
+					}
+				},
+				{
+					"name": "Download User Server Key",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/data/:org_id/:user_id/:server_id.key",
+							"host": ["{{base_url}}"],
+							"path": ["data", ":org_id", ":user_id", ":server_id.key"],
+							"variable": [
+								{
+									"key": "org_id",
+									"value": ""
+								},
+								{
+									"key": "user_id",
+									"value": ""
+								},
+								{
+									"key": "server_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Download specific server key for user"
+					}
+				}
+			],
+			"description": "VPN key download endpoints"
+		},
+		{
+			"name": "Hosts",
+			"item": [
+				{
+					"name": "List Hosts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/host",
+							"host": ["{{base_url}}"],
+							"path": ["host"]
+						},
+						"description": "Get all hosts"
+					}
+				},
+				{
+					"name": "Get Host",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/host/:host_id",
+							"host": ["{{base_url}}"],
+							"path": ["host", ":host_id"],
+							"variable": [
+								{
+									"key": "host_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Get host details"
+					}
+				},
+				{
+					"name": "Update Host",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated Host Name\",\n    \"public_address\": \"1.2.3.4\",\n    \"routed_subnet6\": null,\n    \"link_address\": \"10.0.0.1\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/host/:host_id",
+							"host": ["{{base_url}}"],
+							"path": ["host", ":host_id"],
+							"variable": [
+								{
+									"key": "host_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Update host"
+					}
+				},
+				{
+					"name": "Delete Host",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/host/:host_id",
+							"host": ["{{base_url}}"],
+							"path": ["host", ":host_id"],
+							"variable": [
+								{
+									"key": "host_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Delete host"
+					}
+				},
+				{
+					"name": "Get Host Usage",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/host/:host_id/usage/:period",
+							"host": ["{{base_url}}"],
+							"path": ["host", ":host_id", "usage", ":period"],
+							"variable": [
+								{
+									"key": "host_id",
+									"value": ""
+								},
+								{
+									"key": "period",
+									"value": "1m",
+									"description": "1m, 5m, 30m, 2h, 1d"
+								}
+							]
+						},
+						"description": "Get host usage statistics"
+					}
+				}
+			],
+			"description": "Host management endpoints"
+		},
+		{
+			"name": "Links",
+			"item": [
+				{
+					"name": "List Links",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/link",
+							"host": ["{{base_url}}"],
+							"path": ["link"]
+						},
+						"description": "Get all Pritunl Links"
+					}
+				},
+				{
+					"name": "Create Link",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Site to Site Link\",\n    \"type\": \"direct\",\n    \"status\": \"online\",\n    \"timeout\": 30,\n    \"mtu\": 1500\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/link",
+							"host": ["{{base_url}}"],
+							"path": ["link"]
+						},
+						"description": "Create a new Pritunl Link"
+					}
+				},
+				{
+					"name": "Update Link",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated Link Name\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/link/:link_id",
+							"host": ["{{base_url}}"],
+							"path": ["link", ":link_id"],
+							"variable": [
+								{
+									"key": "link_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Update link"
+					}
+				},
+				{
+					"name": "Delete Link",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/link/:link_id",
+							"host": ["{{base_url}}"],
+							"path": ["link", ":link_id"],
+							"variable": [
+								{
+									"key": "link_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Delete link"
+					}
+				},
+				{
+					"name": "Get Link Locations",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/link/:link_id/location",
+							"host": ["{{base_url}}"],
+							"path": ["link", ":link_id", "location"],
+							"variable": [
+								{
+									"key": "link_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Get link locations"
+					}
+				},
+				{
+					"name": "Create Link Location",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Location 1\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/link/:link_id/location",
+							"host": ["{{base_url}}"],
+							"path": ["link", ":link_id", "location"],
+							"variable": [
+								{
+									"key": "link_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Create link location"
+					}
+				},
+				{
+					"name": "Update Link Location",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated Location\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/link/:link_id/location/:location_id",
+							"host": ["{{base_url}}"],
+							"path": ["link", ":link_id", "location", ":location_id"],
+							"variable": [
+								{
+									"key": "link_id",
+									"value": ""
+								},
+								{
+									"key": "location_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Update link location"
+					}
+				},
+				{
+					"name": "Delete Link Location",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/link/:link_id/location/:location_id",
+							"host": ["{{base_url}}"],
+							"path": ["link", ":link_id", "location", ":location_id"],
+							"variable": [
+								{
+									"key": "link_id",
+									"value": ""
+								},
+								{
+									"key": "location_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Delete link location"
+					}
+				},
+				{
+					"name": "Add Link Route",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"network\": \"192.168.10.0/24\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/link/:link_id/location/:location_id/route",
+							"host": ["{{base_url}}"],
+							"path": ["link", ":link_id", "location", ":location_id", "route"],
+							"variable": [
+								{
+									"key": "link_id",
+									"value": ""
+								},
+								{
+									"key": "location_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Add route to link location"
+					}
+				},
+				{
+					"name": "Delete Link Route",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/link/:link_id/location/:location_id/route/:network",
+							"host": ["{{base_url}}"],
+							"path": ["link", ":link_id", "location", ":location_id", "route", ":network"],
+							"variable": [
+								{
+									"key": "link_id",
+									"value": ""
+								},
+								{
+									"key": "location_id",
+									"value": ""
+								},
+								{
+									"key": "network",
+									"value": "192.168.10.0-24"
+								}
+							]
+						},
+						"description": "Delete route from link location"
+					}
+				},
+				{
+					"name": "Add Link Host",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Host 1\",\n    \"timeout\": 30\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/link/:link_id/location/:location_id/host",
+							"host": ["{{base_url}}"],
+							"path": ["link", ":link_id", "location", ":location_id", "host"],
+							"variable": [
+								{
+									"key": "link_id",
+									"value": ""
+								},
+								{
+									"key": "location_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Add host to link location"
+					}
+				},
+				{
+					"name": "Get Link Host URI",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/link/:link_id/location/:location_id/host/:host_id/uri",
+							"host": ["{{base_url}}"],
+							"path": ["link", ":link_id", "location", ":location_id", "host", ":host_id", "uri"],
+							"variable": [
+								{
+									"key": "link_id",
+									"value": ""
+								},
+								{
+									"key": "location_id",
+									"value": ""
+								},
+								{
+									"key": "host_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Get link host URI"
+					}
+				},
+				{
+					"name": "Get Link Host Config",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/link/:link_id/location/:location_id/host/:host_id/conf",
+							"host": ["{{base_url}}"],
+							"path": ["link", ":link_id", "location", ":location_id", "host", ":host_id", "conf"],
+							"variable": [
+								{
+									"key": "link_id",
+									"value": ""
+								},
+								{
+									"key": "location_id",
+									"value": ""
+								},
+								{
+									"key": "host_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Get link host configuration"
+					}
+				},
+				{
+					"name": "Update Link Host",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated Host\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/link/:link_id/location/:location_id/host/:host_id",
+							"host": ["{{base_url}}"],
+							"path": ["link", ":link_id", "location", ":location_id", "host", ":host_id"],
+							"variable": [
+								{
+									"key": "link_id",
+									"value": ""
+								},
+								{
+									"key": "location_id",
+									"value": ""
+								},
+								{
+									"key": "host_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Update link host"
+					}
+				},
+				{
+					"name": "Delete Link Host",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/link/:link_id/location/:location_id/host/:host_id",
+							"host": ["{{base_url}}"],
+							"path": ["link", ":link_id", "location", ":location_id", "host", ":host_id"],
+							"variable": [
+								{
+									"key": "link_id",
+									"value": ""
+								},
+								{
+									"key": "location_id",
+									"value": ""
+								},
+								{
+									"key": "host_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Delete link host"
+					}
+				},
+				{
+					"name": "Add Link Peer",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/link/:link_id/location/:location_id/peer",
+							"host": ["{{base_url}}"],
+							"path": ["link", ":link_id", "location", ":location_id", "peer"],
+							"variable": [
+								{
+									"key": "link_id",
+									"value": ""
+								},
+								{
+									"key": "location_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Add peer to link location"
+					}
+				},
+				{
+					"name": "Delete Link Peer",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/link/:link_id/location/:location_id/peer/:peer_id",
+							"host": ["{{base_url}}"],
+							"path": ["link", ":link_id", "location", ":location_id", "peer", ":peer_id"],
+							"variable": [
+								{
+									"key": "link_id",
+									"value": ""
+								},
+								{
+									"key": "location_id",
+									"value": ""
+								},
+								{
+									"key": "peer_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Delete peer from link location"
+					}
+				},
+				{
+					"name": "Add Link Transit",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/link/:link_id/location/:location_id/transit",
+							"host": ["{{base_url}}"],
+							"path": ["link", ":link_id", "location", ":location_id", "transit"],
+							"variable": [
+								{
+									"key": "link_id",
+									"value": ""
+								},
+								{
+									"key": "location_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Add transit to link location"
+					}
+				},
+				{
+					"name": "Delete Link Transit",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/link/:link_id/location/:location_id/transit/:transit_id",
+							"host": ["{{base_url}}"],
+							"path": ["link", ":link_id", "location", ":location_id", "transit", ":transit_id"],
+							"variable": [
+								{
+									"key": "link_id",
+									"value": ""
+								},
+								{
+									"key": "location_id",
+									"value": ""
+								},
+								{
+									"key": "transit_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Delete transit from link location"
+					}
+				},
+				{
+					"name": "Update Link State",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"online\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/link/state",
+							"host": ["{{base_url}}"],
+							"path": ["link", "state"]
+						},
+						"description": "Update link state (online/offline)"
+					}
+				},
+				{
+					"name": "Delete Link State",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/link/state",
+							"host": ["{{base_url}}"],
+							"path": ["link", "state"]
+						},
+						"description": "Delete link state"
+					}
+				}
+			],
+			"description": "Pritunl Link management for site-to-site VPN"
+		},
+		{
+			"name": "Settings",
+			"item": [
+				{
+					"name": "Get Settings",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/settings",
+							"host": ["{{base_url}}"],
+							"path": ["settings"]
+						},
+						"description": "Get all application settings"
+					}
+				},
+				{
+					"name": "Update Settings",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"server_cert\": null,\n    \"server_key\": null,\n    \"acme_domain\": null,\n    \"auditing\": \"none\",\n    \"monitoring\": \"datadog\",\n    \"influxdb_uri\": null,\n    \"email_from\": \"pritunl@example.com\",\n    \"email_server\": \"smtp.gmail.com\",\n    \"email_username\": \"\",\n    \"email_password\": \"\",\n    \"sso\": [],\n    \"sso_match\": [],\n    \"sso_azure_directory_id\": null,\n    \"sso_azure_app_id\": null,\n    \"sso_azure_app_secret\": null,\n    \"sso_google_key\": null,\n    \"sso_google_email\": null,\n    \"sso_org\": null,\n    \"theme\": \"dark\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/settings",
+							"host": ["{{base_url}}"],
+							"path": ["settings"]
+						},
+						"description": "Update application settings"
+					}
+				},
+				{
+					"name": "Get Available Zones",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/settings/zones",
+							"host": ["{{base_url}}"],
+							"path": ["settings", "zones"]
+						},
+						"description": "Get available AWS zones"
+					}
+				}
+			],
+			"description": "Application settings management"
+		},
+		{
+			"name": "SSO",
+			"item": [
+				{
+					"name": "SSO Authenticate",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"user@example.com\",\n    \"password\": \"password\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/sso/authenticate",
+							"host": ["{{base_url}}"],
+							"path": ["sso", "authenticate"]
+						},
+						"description": "SSO authentication endpoint"
+					}
+				},
+				{
+					"name": "SSO Request",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/sso/request",
+							"host": ["{{base_url}}"],
+							"path": ["sso", "request"]
+						},
+						"description": "Initiate SSO request"
+					}
+				},
+				{
+					"name": "SSO Callback",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/sso/callback",
+							"host": ["{{base_url}}"],
+							"path": ["sso", "callback"]
+						},
+						"description": "SSO callback endpoint"
+					}
+				},
+				{
+					"name": "SSO Duo",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"user@example.com\",\n    \"factor\": \"push\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/sso/duo",
+							"host": ["{{base_url}}"],
+							"path": ["sso", "duo"]
+						},
+						"description": "Duo Security SSO authentication"
+					}
+				},
+				{
+					"name": "SSO Yubico",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"user@example.com\",\n    \"yubico_key\": \"your_yubico_key\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/sso/yubico",
+							"host": ["{{base_url}}"],
+							"path": ["sso", "yubico"]
+						},
+						"description": "Yubico SSO authentication"
+					}
+				}
+			],
+			"description": "Single Sign-On endpoints"
+		},
+		{
+			"name": "Device Management",
+			"item": [
+				{
+					"name": "Get Unregistered Devices",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/device/unregistered",
+							"host": ["{{base_url}}"],
+							"path": ["device", "unregistered"]
+						},
+						"description": "Get list of unregistered devices"
+					}
+				},
+				{
+					"name": "Register Device",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/device/register/:org_id/:user_id/:device_id",
+							"host": ["{{base_url}}"],
+							"path": ["device", "register", ":org_id", ":user_id", ":device_id"],
+							"variable": [
+								{
+									"key": "org_id",
+									"value": ""
+								},
+								{
+									"key": "user_id",
+									"value": ""
+								},
+								{
+									"key": "device_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Register/approve a device"
+					}
+				},
+				{
+					"name": "Unregister Device",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/device/register/:org_id/:user_id/:device_id",
+							"host": ["{{base_url}}"],
+							"path": ["device", "register", ":org_id", ":user_id", ":device_id"],
+							"variable": [
+								{
+									"key": "org_id",
+									"value": ""
+								},
+								{
+									"key": "user_id",
+									"value": ""
+								},
+								{
+									"key": "device_id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Unregister/reject a device"
+					}
+				}
+			],
+			"description": "Device registration and management"
+		},
+		{
+			"name": "Logs & Monitoring",
+			"item": [
+				{
+					"name": "Get Logs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/log",
+							"host": ["{{base_url}}"],
+							"path": ["log"]
+						},
+						"description": "Get application logs"
+					}
+				},
+				{
+					"name": "Get Log Entries",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/logs",
+							"host": ["{{base_url}}"],
+							"path": ["logs"]
+						},
+						"description": "Get log entries"
+					}
+				}
+			],
+			"description": "Logging and monitoring endpoints"
+		},
+		{
+			"name": "Status & Events",
+			"item": [
+				{
+					"name": "Get Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/status",
+							"host": ["{{base_url}}"],
+							"path": ["status"]
+						},
+						"description": "Get server status and statistics"
+					}
+				},
+				{
+					"name": "Get Events Stream",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/event",
+							"host": ["{{base_url}}"],
+							"path": ["event"]
+						},
+						"description": "Get server events (Server-Sent Events stream)"
+					}
+				},
+				{
+					"name": "Get Events from Cursor",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/event/:cursor",
+							"host": ["{{base_url}}"],
+							"path": ["event", ":cursor"],
+							"variable": [
+								{
+									"key": "cursor",
+									"value": ""
+								}
+							]
+						},
+						"description": "Get events from specific cursor position"
+					}
+				},
+				{
+					"name": "Ping",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/ping",
+							"host": ["{{base_url}}"],
+							"path": ["ping"]
+						},
+						"description": "Health check endpoint"
+					}
+				},
+				{
+					"name": "Check",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/check",
+							"host": ["{{base_url}}"],
+							"path": ["check"]
+						},
+						"description": "Health check endpoint"
+					}
+				}
+			],
+			"description": "Status and event monitoring endpoints"
+		},
+		{
+			"name": "Subscription",
+			"item": [
+				{
+					"name": "Get Subscription",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/subscription",
+							"host": ["{{base_url}}"],
+							"path": ["subscription"]
+						},
+						"description": "Get subscription information"
+					}
+				},
+				{
+					"name": "Activate Subscription",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"license\": \"YOUR_LICENSE_KEY\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/subscription",
+							"host": ["{{base_url}}"],
+							"path": ["subscription"]
+						},
+						"description": "Activate subscription with license key"
+					}
+				},
+				{
+					"name": "Update Subscription",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"license\": \"UPDATED_LICENSE_KEY\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/subscription",
+							"host": ["{{base_url}}"],
+							"path": ["subscription"]
+						},
+						"description": "Update subscription"
+					}
+				},
+				{
+					"name": "Delete Subscription",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/subscription",
+							"host": ["{{base_url}}"],
+							"path": ["subscription"]
+						},
+						"description": "Remove subscription"
+					}
+				}
+			],
+			"description": "Subscription management endpoints"
+		}
+	]
+}
